@@ -18,7 +18,6 @@ import cascading.pipe.assembly.Rename;
 import cascading.pipe.assembly.Retain;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
-import fr.xebia.cascading.learn.level2.CustomSplitFunction;
 
 /**
  * You now know all the basics operators. Here you will have to compose them by yourself.
@@ -32,7 +31,13 @@ public class FreestyleJobs {
 	 * sink field(s) : "word","count"
 	 */
 	public static FlowDef countWordOccurences(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+        Pipe pipe = new Each("countWordOccurences", new Fields("line"), new CustomSplitFunction<Object>(new Fields("word")), Fields.SWAP);
+
+        pipe = new CountBy(pipe, new Fields("word"), new Fields("count"));
+        return FlowDef.flowDef()//
+                .addSource(pipe, source) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
 	}
 	
 	/**
