@@ -29,7 +29,13 @@ public class Reducing {
 	 * @see http://docs.cascading.org/cascading/2.1/userguide/html/ch03s03.html#N205C2
 	 */
 	public static FlowDef aggregate(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+        Pipe pipe = new Pipe("aggregate");
+        pipe = new GroupBy(pipe, new Fields("word"));
+        pipe = new Every(pipe, new Count());
+        return FlowDef.flowDef()//
+                .addSource(pipe, source) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
 	}
 	
 	/**
@@ -42,6 +48,11 @@ public class Reducing {
 	 * @see http://docs.cascading.org/cascading/2.1/userguide/html/ch07s08.html
 	 */
 	public static FlowDef efficientlyAggregate(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+        Pipe pipe = new Pipe("efficientlyAggregate");
+        pipe = new CountBy(pipe, new Fields("word"), new Fields("count"));
+        return FlowDef.flowDef()//
+                .addSource(pipe, source) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
 	}
 }

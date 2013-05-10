@@ -1,11 +1,12 @@
 package fr.xebia.cascading.learn.level4;
 
 import cascading.flow.FlowDef;
+import cascading.operation.aggregator.Count;
 import cascading.operation.expression.ExpressionFilter;
-import cascading.pipe.CoGroup;
-import cascading.pipe.Each;
-import cascading.pipe.Pipe;
+import cascading.pipe.*;
 import cascading.pipe.assembly.Discard;
+import cascading.pipe.assembly.Rename;
+import cascading.pipe.assembly.Retain;
 import cascading.pipe.joiner.InnerJoin;
 import cascading.tap.Tap;
 import cascading.tap.hadoop.TemplateTap;
@@ -30,7 +31,19 @@ public class NonLinearDataflow {
 	 */
 	public static FlowDef cogroup(Tap<?, ?, ?> presidentsSource, Tap<?, ?, ?> partiesSource,
 			Tap<?, ?, ?> sink) {
-		return null;
+        Pipe presidentPipe = new Pipe("president");
+        presidentPipe = new Rename(presidentPipe, new Fields("year"), new Fields("pre_year"));
+
+        Pipe partyPipe = new Pipe("party");
+
+        Pipe pipe = new CoGroup(new Pipe[] {presidentPipe, partyPipe}, new Fields[]{new Fields("pre_year"), new Fields("year")});
+        pipe = new Retain(pipe, new Fields("president", "party"));
+
+        return FlowDef.flowDef()//
+                .addSource(presidentPipe, presidentsSource)
+                .addSource(partyPipe, partiesSource) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
 	}
 	
 	/**
@@ -48,7 +61,49 @@ public class NonLinearDataflow {
 	 */
 	public static FlowDef split(Tap<?, ?, ?> source,
 			Tap<?, ?, ?> gaullistSink, Tap<?, ?, ?> republicanSink, Tap<?, ?, ?> socialistSink) {
-		return null;
+        Pipe pipe = new Pipe("input");
+
+        Pipe gaullistPipe = new Pipe("gaullist", pipe);
+        gaullistPipe = new Each(gaullistPipe, new Fields("party"), new ExpressionFilter("!party.equals(\"Gaullist\")", String.class));
+
+
+        Pipe republicanPipe = new Pipe("republican", pipe);
+        republicanPipe = new Each(republicanPipe, new Fields("party"), new ExpressionFilter("!party.equals(\"Republican\")", String.class));
+
+        Pipe socialistPipe = new Pipe("socialist", pipe);
+        socialistPipe = new Each(socialistPipe, new Fields("party"), new ExpressionFilter("!party.equals(\"Socialist\")", String.class));
+
+
+        return FlowDef.flowDef()//
+                .addSource(pipe, source)
+                .addTail(gaullistPipe)//
+                .addTail(republicanPipe)//
+                .addTail(socialistPipe)//
+                .addSink(gaullistPipe, gaullistSink)
+                .addSink(republicanPipe, republicanSink)
+                .addSink(socialistPipe, socialistSink);
 	}
+
+
+    public static FlowDef split(Tap<?, ?, ?> source,
+                                Tap<?, ?, ?> templateSink) {
+        Pipe pipe = new Pipe("input");
+
+        Pipe gaullistPipe = new Pipe("gaullist", pipe);
+        gaullistPipe = new Each(gaullistPipe, new Fields("party"), new ExpressionFilter("!party.equals(\"Gaullist\")", String.class));
+
+
+        Pipe republicanPipe = new Pipe("republican", pipe);
+        republicanPipe = new Each(republicanPipe, new Fields("party"), new ExpressionFilter("!party.equals(\"Republican\")", String.class));
+
+        Pipe socialistPipe = new Pipe("socialist", pipe);
+        socialistPipe = new Each(socialistPipe, new Fields("party"), new ExpressionFilter("!party.equals(\"Socialist\")", String.class));
+
+
+        return FlowDef.flowDef()//
+                .addSource(pipe, source)
+                .addTail(pipe)//
+                .addSink(pipe, templateSink);
+    }
 	
 }

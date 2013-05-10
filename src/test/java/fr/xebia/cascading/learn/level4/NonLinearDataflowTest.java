@@ -1,5 +1,7 @@
 package fr.xebia.cascading.learn.level4;
 
+import cascading.tap.local.TemplateTap;
+import cascading.tuple.Fields;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -65,5 +67,34 @@ public class NonLinearDataflowTest {
 		Assert.sameContent(socialistPath, "src/test/resources/level4/split/expectation-socialist.txt");
 
 	}
+
+
+    @Test
+    public void learnToSplitWithTemplate() throws Exception {
+        // input of the job
+        String sourcePath = "src/test/resources/level4/cogroup/expectation.txt";
+        Tap<?, ?, ?> source = new FileTap(new TextDelimited(true, "\t"), sourcePath);
+
+        // actual outputs of the job
+        String skinPath = "target/level4/";
+        FileTap root = new FileTap(new TextDelimited(true, "\t"), skinPath);
+        String template = "split-%s";
+        Tap<?, ?, ?> templateSink = new TemplateTap(root, template, new Fields("party"), SinkMode.REPLACE);
+
+
+        String gaullistPath = "target/level4/split-Gaullist";
+        String republicanPath = "target/level4/split-Republican";
+        String socialistPath = "target/level4/split-Socialist";
+
+        // create the job definition, and run it
+        FlowDef flowDef = NonLinearDataflow.split(source, templateSink);
+        new LocalFlowConnector().connect(flowDef).complete();
+
+        // check that actual and expect outputs are the same
+        Assert.sameContent(gaullistPath, "src/test/resources/level4/split/expectation-gaullist.txt");
+        Assert.sameContent(republicanPath, "src/test/resources/level4/split/expectation-republican.txt");
+        Assert.sameContent(socialistPath, "src/test/resources/level4/split/expectation-socialist.txt");
+
+    }
 
 }
