@@ -27,7 +27,12 @@ public class BasicSchemaManipulation {
 	 * @see http://docs.cascading.org/cascading/2.1/userguide/html/ch09s03.html
 	 */
 	public static FlowDef discardField(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+        Pipe pipe = new Pipe("discardField");
+        pipe = new Discard(pipe, new Fields("discardme"));
+        return FlowDef.flowDef()//
+                .addSource(pipe, source) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
 	}
 	
 	/**
@@ -39,7 +44,12 @@ public class BasicSchemaManipulation {
 	 * @see http://docs.cascading.org/cascading/2.1/userguide/html/ch09s05.html
 	 */
 	public static FlowDef retainField(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+        Pipe pipe = new Pipe("retainField");
+        pipe = new Retain(pipe, new Fields("line"));
+        return FlowDef.flowDef()//
+                .addSource(pipe, source) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
 	}
 	
 	/**
@@ -51,7 +61,12 @@ public class BasicSchemaManipulation {
 	 * @see http://docs.cascading.org/cascading/2.1/userguide/html/ch09s04.html
 	 */
 	public static FlowDef renameField(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+        Pipe pipe = new Pipe("renameField");
+        pipe = new Rename(pipe, new Fields("renameme"), new Fields("line"));
+        return FlowDef.flowDef()//
+                .addSource(pipe, source) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
 	}
 
 }
